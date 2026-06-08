@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Adventure Homepage</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        body { 
+            font-family: 'Courier New', monospace; 
+            background: linear-gradient(135deg, #050505, #3E0F0F, #7A1C1C);
+            color: #E0E0E0; 
+            min-height: 100vh; 
+        }
+
+        /* Container */
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+
+        /* Main Heading */
+        h1 { 
+            text-align: center; 
+            font-size: 3em; 
+            margin: 40px 0; 
+            text-shadow: 0 0 25px #9E1C1C; 
+        }
+
+        /* HORIZONTAL SCROLLER WRAPPER */
+        .genres-wrapper {
+            margin: 50px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Track that moves horizontally */
+        .genres-track {
+            display: flex;
+            gap: 30px;
+            width: max-content;
+            animation: scrollGenres 25s linear infinite;
+        }
+
+        /* Infinite loop animation */
+        @keyframes scrollGenres {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Genre Card */
+        .genre-card { 
+            background: rgba(62, 15, 15, 0.9); 
+            border: 2px solid #9E1C1C; 
+            border-radius: 15px; 
+            padding: 30px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            min-width: 260px;
+            max-width: 280px;
+        }
+
+        .genre-card:hover { 
+            transform: translateY(-10px); 
+            border-color: #C85F1E; 
+            box-shadow: 0 15px 35px rgba(200, 95, 30, 0.35);
+            background: rgba(100, 20, 20, 0.95);
+        }
+
+        /* Card Titles */
+        .genre-card h2 { 
+            color: #C85F1E; 
+            font-size: 1.8em; 
+            margin-bottom: 15px; 
+        }
+
+        /* Card Description */
+        .genre-card p { 
+            line-height: 1.6; 
+            margin-bottom: 20px; 
+            color: #B1B1B1;
+        }
+
+        /* Start Button */
+        .start-btn { 
+            background: linear-gradient(45deg, #7A1C1C, #C85F1E); 
+            color: white; 
+            border: none; 
+            padding: 12px 30px; 
+            border-radius: 25px; 
+            font-size: 1.1em; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            font-family: inherit; 
+        }
+
+        .start-btn:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 10px 25px rgba(200, 95, 30, 0.5); 
+        }
+
+        /* Adventure Screen (full-screen background per genre) */
+        .adventure-screen { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: none; 
+            z-index: 1000; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Dark overlay for readability */
+        .adventure-screen::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 5, 5, 0.85);
+            z-index: 0;
+        }
+
+        /* Genre-specific backgrounds (make sure these files exist in same folder) */
+        .adventure-screen.fantasy-bg {
+            background-image: url('fantasy-bg.jpg');
+        }
+
+        .adventure-screen.scifi-bg {
+            background-image: url('scifi-bg.jpg');
+        }
+
+        .adventure-screen.mystery-bg {
+            background-image: url('mystery-bg.jpg');
+        }
+
+        .adventure-screen.horror-bg {
+            background-image: url('horror-bg.jpg');
+        }
+
+        /* Adventure Section */
+        .adventure-content { 
+            max-width: 800px; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+            padding: 40px; 
+            position: relative;
+            z-index: 1; /* above overlay */
+        }
+
+        /* Story Box */
+        .story-text { 
+            font-size: 1.3em; 
+            line-height: 1.7; 
+            margin-bottom: 30px; 
+            background: rgba(62, 15, 15, 0.35); 
+            padding: 25px; 
+            border-radius: 10px; 
+            border: 1px solid #7A1C1C;
+        }
+
+        /* Choices */
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn { 
+            background: linear-gradient(45deg, #3E0F0F, #7A1C1C); 
+            color: white; 
+            border: none; 
+            padding: 15px 25px; 
+            border-radius: 8px; 
+            font-size: 1.1em; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            font-family: inherit; 
+            text-align: left; 
+        }
+
+        .choice-btn:hover { 
+            background: linear-gradient(45deg, #7A1C1C, #3E0F0F); 
+            transform: translateX(10px); 
+        }
+
+        /* Back Home Button */
+        .back-home { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            background: #7A1C1C; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-family: inherit; 
+            z-index: 2;
+        }
+
+        .back-home:hover { 
+            background: #C85F1E;
+        }
+
+        /* End Modal */
+        .end-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .end-modal-content {
+            background: #1a0505;
+            border: 2px solid #9E1C1C;
+            border-radius: 15px;
+            padding: 30px 35px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(200, 95, 30, 0.4);
+        }
+
+        .end-modal-content h2 {
+            margin-bottom: 15px;
+            color: #C85F1E;
+        }
+
+        .end-modal-content p {
+            margin-bottom: 25px;
+            color: #E0E0E0;
+        }
+
+        .end-modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .end-btn {
+            padding: 10px 22px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1em;
+            transition: 0.25s;
+        }
+
+        .end-btn.restart {
+            background: linear-gradient(45deg, #7A1C1C, #C85F1E);
+            color: white;
+        }
+
+        .end-btn.restart:hover {
+            transform: scale(1.05);
+        }
+
+        .end-btn.home {
+            background: #3E0F0F;
+            color: #E0E0E0;
+            border: 1px solid #9E1C1C;
+        }
+
+        .end-btn.home:hover {
+            transform: scale(1.05);
+            background: #7A1C1C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 BLOOD MOON ADVENTURE 🌙</h1>
+
+        <!-- HORIZONTAL INFINITE SCROLLER -->
+        <div class="genres-wrapper">
+            <div class="genres-track">
+                <!-- ORIGINAL 4 GENRES -->
+                <div class="genre-card">
+                    <h2>🧙‍♂ Fantasy Quest</h2>
+                    <p>You are a young mage on the eve of your initiation, in a kingdom where the sky glows red under a looming blood moon. Ancient prophecies whisper that you alone may stop the rise of a dark sorcerer.</p>
+                    <button class="start-btn" onclick="startAdventure('fantasy')">Begin Quest</button>
+                </div>
+                <div class="genre-card">
+                    <h2>🚀 Sci-Fi Survival</h2>
+                    <p>Your starship has crashed on a hostile alien world. The air crackles with static, strange constellations burn overhead, and something huge moves just beyond the wreckage light.</p>
+                    <button class="start-btn" onclick="startAdventure('scifi')">Launch Mission</button>
+                </div>
+                <div class="genre-card">
+                    <h2>🕵‍♂ Mystery Detective</h2>
+                    <p>On a stormy night, the city museum reports the impossible: its most guarded artifact, the Jade Dragon, has vanished from a sealed vault. Everyone has secrets. Only you have the questions.</p>
+                    <button class="start-btn" onclick="startAdventure('mystery')">Investigate Case</button>
+                </div>
+                <div class="genre-card">
+                    <h2>👻 Horror Night</h2>
+                    <p>On an empty highway under the blood moon, your car dies in front of a forgotten mansion. The lights inside flicker, the woods whisper your name, and the night feels very, very wrong.</p>
+                    <button class="start-btn" onclick="startAdventure('horror')">Enter Nightmare</button>
+                </div>
+
+                <!-- DUPLICATE 4 GENRES FOR INFINITE LOOP -->
+                <div class="genre-card">
+                    <h2>🧙‍♂ Fantasy Quest</h2>
+                    <p>You are a young mage on the eve of your initiation, in a kingdom where the sky glows red under a looming blood moon. Ancient prophecies whisper that you alone may stop the rise of a dark sorcerer.</p>
+                    <button class="start-btn" onclick="startAdventure('fantasy')">Begin Quest</button>
+                </div>
+                <div class="genre-card">
+                    <h2>🚀 Sci-Fi Survival</h2>
+                    <p>Your starship has crashed on a hostile alien world. The air crackles with static, strange constellations burn overhead, and something huge moves just beyond the wreckage light.</p>
+                    <button class="start-btn" onclick="startAdventure('scifi')">Launch Mission</button>
+                </div>
+                <div class="genre-card">
+                    <h2>🕵‍♂ Mystery Detective</h2>
+                    <p>On a stormy night, the city museum reports the impossible: its most guarded artifact, the Jade Dragon, has vanished from a sealed vault. Everyone has secrets. Only you have the questions.</p>
+                    <button class="start-btn" onclick="startAdventure('mystery')">Investigate Case</button>
+                </div>
+                <div class="genre-card">
+                    <h2>👻 Horror Night</h2>
+                    <p>On an empty highway under the blood moon, your car dies in front of a forgotten mansion. The lights inside flicker, the woods whisper your name, and the night feels very, very wrong.</p>
+                    <button class="start-btn" onclick="startAdventure('horror')">Enter Nightmare</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adventure Screen -->
+    <div id="adventureScreen" class="adventure-screen">
+        <button class="back-home" onclick="backToHome()">🏠 Home</button>
+        <div class="adventure-content">
+            <div id="storyText" class="story-text"></div>
+            <div id="choices" class="choices"></div>
+        </div>
+    </div>
+
+    <!-- End Screen Modal -->
+    <div id="endModal" class="end-modal">
+        <div class="end-modal-content">
+            <h2>Adventure Complete</h2>
+            <p>Do you want to restart this adventure or go back to the home screen?</p>
+            <div class="end-modal-buttons">
+                <button class="end-btn restart" onclick="restartAdventure()">Restart</button>
+                <button class="end-btn home" onclick="goHomeFromModal()">Home</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const adventures = {
+            /* =================== FANTASY =================== */
+            fantasy: [
+                {
+                    story:
+                        "You stand at the edge of Eldoria Forest as the blood moon hangs heavy above the treetops. " +
+                        "A wise old owl, feathers flecked with silver, lands on a gnarled branch and speaks in a raspy voice:<br><br>" +
+                        "'Young mage, the Dark Sorcerer Zargoth stirs again. To the east, the Forest Path leads to the Crystal Caves where the legendary Crystal of Light sleeps. " +
+                        "To the north, the Mountain Trail winds toward the Mage Academy where you may hone your power. Or you may run home and warn your village, but time is short.'",
+                    choices: [
+                        { text: "Take the Forest Path → Crystal Caves", next: 1 },
+                        { text: "Climb the Mountain Trail → Mage Academy", next: 2 },
+                        { text: "Return to your village to warn them", next: 7 }
+                    ]
+                },
+                {
+                    story:
+                        "The forest thickens around you, branches knitting overhead like clawed fingers. " +
+                        "Bioluminescent mushrooms light your way until you finally step into a cavern of shimmering crystal pillars. " +
+                        "In the center, on a stone pedestal, rests the Crystal of Light.<br><br>" +
+                        "A stone golem awakens, its eyes glowing like molten lava. It rumbles: 'Only the worthy may touch the Crystal.' It raises a fist, ready to strike. " +
+                        "You can blast it, reason with it, or retreat and seek more training.",
+                    choices: [
+                        { text: "Cast a blazing Fireball at the golem", next: 3 },
+                        { text: "Speak calmly and try to solve its riddle", next: 4 },
+                        { text: "Retreat and head to the Mage Academy", next: 2 }
+                    ]
+                },
+                {
+                    story:
+                        "You reach the Mage Academy as thunder rolls over the distant mountains. " +
+                        "Torches flicker along tall marble halls. In the grand dueling chamber, the Headmaster—robes glowing faintly under the blood moon—faces you with staff in hand.<br><br>" +
+                        "'Prove your worth, apprentice,' he says. Arcane symbols swirl in the air. You can raise a powerful Shield Spell to protect yourself, " +
+                        "channel storm energy into a risky Lightning Bolt, or slip away into the forbidden library in search of secret power.",
+                    choices: [
+                        { text: "Use a disciplined Shield Spell (defend)", next: 5 },
+                        { text: "Channel a wild Lightning Bolt (attack)", next: 6 },
+                        { text: "Sneak into the Forbidden Library", next: 8 }
+                    ]
+                },
+                {
+                    story:
+                        "You hurl a searing Fireball that explodes against the stone golem. Its rocky shell cracks and shatters, raining debris across the cavern. " +
+                        "The Crystal of Light hums with unstable energy as the shockwave ripples through it.<br><br>" +
+                        "The golem crumbles, defeated. But you sense the crystal is damaged and volatile. " +
+                        "You can attempt to repair its fractures with careful magic, or snatch it and escape before the cave collapses.",
+                    choices: [
+                        { text: "Try to carefully repair the Crystal", next: 9 },
+                        { text: "Grab the Crystal and run", next: 10 }
+                    ]
+                },
+                {
+                    story:
+                        "You lower your hands and listen as the golem speaks in a grinding, ancient tone: " +
+                        "'Answer this: What has roots that nobody sees, is taller than trees, up, up it goes, and yet never grows?' " +
+                        "You breathe deeply and recall your childhood lessons.<br><br>" +
+                        "'A mountain,' you answer. The golem’s eyes soften, and it kneels, allowing you to claim the Crystal of Light. " +
+                        "Its warmth spreads through your veins, washing away Zargoth’s creeping darkness across the land.<br><br>" +
+                        "<strong>Victory through wisdom and patience! Eldoria is saved.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You weave a shimmering Shield Spell around yourself. The Headmaster’s bolts of energy slam into your barrier and dissolve like sparks in the wind. " +
+                        "When the magic fades, he smiles proudly.<br><br>" +
+                        "'You understand that protection is as important as power,' he says. " +
+                        "He offers you a choice: serve on the Mage Council and guide others, or take the Crystal of Light and lead the charge against Zargoth yourself.",
+                    choices: [
+                        { text: "Join the Mage Council and guide the future", next: 12 },
+                        { text: "Accept the quest to hunt Zargoth personally", next: 11 }
+                    ]
+                },
+                {
+                    story:
+                        "Lightning crackles at your fingertips as you unleash a devastating bolt. It streaks across the chamber, dazzling and loud—yet uncontrolled. " +
+                        "The Headmaster deflects it with minimal effort and sends a gentle but firm blast that knocks you to the floor.<br><br>" +
+                        "'Power without discipline is dangerous,' he warns. You feel shame burn in your cheeks, but also a stubborn determination. " +
+                        "Will you accept your failure and walk away, or beg for a second chance to prove yourself?",
+                    choices: [
+                        { text: "Accept failure and abandon the trial", next: 14 },
+                        { text: "Beg for a second chance in the mirror chamber", next: 13 }
+                    ]
+                },
+                {
+                    story:
+                        "You rush back toward your village. Smoke rises on the horizon—Zargoth’s shadow-creatures are already there. " +
+                        "Houses burn beneath the blood moon as villagers scream and flee.<br><br>" +
+                        "With your untested magic, you can either stand and defend your home now, or sprint past the chaos toward the capital to summon an army.",
+                    choices: [
+                        { text: "Stay and defend the village with raw magic", next: 3 },
+                        { text: "Run to the capital to seek help", next: 2 }
+                    ]
+                },
+                {
+                    story:
+                        "In the forbidden library, dusty tomes whisper promises of power. A cursed black grimoire pulses on a pedestal, " +
+                        "its cover bound in something that might once have been skin. Beside it, a safer-looking tome radiates a calm blue light and bears the sigil of advanced shielding.<br><br>" +
+                        "What knowledge will you choose?",
+                    choices: [
+                        { text: "Open the cursed grimoire of forbidden magic", next: 13 },
+                        { text: "Study the advanced shielding tome instead", next: 5 }
+                    ]
+                },
+                {
+                    story:
+                        "With great focus, you channel healing magic into the fractured Crystal. Cracks seal, light stabilizes, and a calm radiance spreads through the cave. " +
+                        "Zargoth’s influence fades dramatically, though not completely—his power is weakened but not destroyed.<br><br>" +
+                        "You are named Guardian of the Crystal, protector of the balance, as the blood moon slowly loses its crimson hue.<br><br>" +
+                        "<strong>You save the world and watch over it in peace. Ending: Crystal Guardian.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You snatch the Crystal and sprint for the exit. Behind you, the cavern collapses in a roaring cascade of stone and magic. " +
+                        "Outside, lightning tears across the blood-red sky as the Crystal trembles in your hands.<br><br>" +
+                        "Zargoth’s power is crippled, but the land pays the price—fields wither and storms rage. Villagers hail you as a hero, " +
+                        "yet whisper that your recklessness scarred the world forever.<br><br>" +
+                        "<strong>Bittersweet victory. Ending: The Scarred Hero.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You accept the quest and set out with a small cadre of elite mages. Guided by the Crystal’s glow, you march to Zargoth’s obsidian tower, " +
+                        "where lightning claws at the sky.<br><br>" +
+                        "After a brutal duel of spell and will, you finally strike Zargoth down. His tower collapses, and the blood moon fades to silver. " +
+                        "Songs of your victory echo through taverns and temples for generations.<br><br>" +
+                        "<strong>Legendary Hero Ending: Zargoth is no more.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You join the Mage Council. From a high crystal spire, you guide new generations of mages and ensure balance in magic. " +
+                        "You never personally battle Zargoth, but your wisdom prevents future dark sorcerers from rising unchecked.<br><br>" +
+                        "When the blood moon appears again in distant ages, your teachings are what keep the world safe.<br><br>" +
+                        "<strong>Quiet Mentor Ending: You save the world in silence.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "The Headmaster leads you to the mirror chamber, where illusions of your greatest fears and failures materialize. " +
+                        "You see yourself losing control, your village in flames, your friends turning away.<br><br>" +
+                        "You can face these phantoms with calm focus, accepting your flaws, or blast through them with raw power again—hoping brute strength will be enough this time.",
+                    choices: [
+                        { text: "Face the illusions calmly and honestly", next: 5 },
+                        { text: "Blast through the illusions with raw power", next: 6 }
+                    ]
+                },
+                {
+                    story:
+                        "You lower your head. The Headmaster sighs, placing a hand on your shoulder. 'Not every mage is meant for combat,' he says gently. " +
+                        "You leave the Academy and live a quiet life, using simple spells to help farmers and heal minor wounds.<br><br>" +
+                        "On nights when the blood moon rises, you look up and wonder what might have been.<br><br>" +
+                        "<em>Ending: The Path Not Taken.</em>",
+                    choices: [] // Ending
+                }
+            ],
+
+            /* =================== SCI-FI =================== */
+            scifi: [
+                {
+                    story:
+                        "Your ship’s wreckage smolders on the crimson sands of Xerion-7. Jagged mountains pierce the sky, and twin moons—one of them a haunting blood-red—glow through the dusty atmosphere. " +
+                        "In the distance, you spot a flickering beacon tower to the east and the shadow of alien ruins to the west. Behind you, your crashed ship might still hold useful supplies.<br><br>" +
+                        "The wind carries distant roars and the crackle of static from your damaged comms. You must act before night falls completely.",
+                    choices: [
+                        { text: "Head East → Try to repair the beacon", next: 1 },
+                        { text: "Head West → Explore the alien ruins", next: 2 },
+                        { text: "Search the crash site for supplies first", next: 7 }
+                    ]
+                },
+                {
+                    story:
+                        "The repair beacon looms above you, its antenna bent and panels shattered. Nearby, clusters of glowing energy crystals pulse gently in the sand. " +
+                        "Swarms of luminous insects hover around them, drawn to the power.<br><br>" +
+                        "Your tools are limited, the air is getting colder, and the red moon climbs higher. Do you activate the beacon now with what you have, " +
+                        "risk tampering with the crystals for extra power, or try to scan the insects first?",
+                    choices: [
+                        { text: "Activate the beacon immediately", next: 3 },
+                        { text: "Collect more crystals for a stronger signal", next: 4 },
+                        { text: "Scan the glowing insects with your scanner", next: 8 }
+                    ]
+                },
+                {
+                    story:
+                        "The alien ruins rise from the desert like the bones of a forgotten titan. Strange symbols glow faintly along the walls. " +
+                        "Inside, you find a holographic console humming with ancient energy. As you approach, your motion sensor blares—multiple lifeforms closing in.<br><br>" +
+                        "You can try to download as much alien data as possible, flee back toward your crashed ship, or hide in the shadows to observe the approaching creatures.",
+                    choices: [
+                        { text: "Download the alien data quickly", next: 5 },
+                        { text: "Flee back toward the ship", next: 6 },
+                        { text: "Hide and observe the creatures from the shadows", next: 9 }
+                    ]
+                },
+                {
+                    story:
+                        "You patch the beacon together with shaking hands and jam the main switch. The tower buzzes, coughs sparks, then roars to life, firing a bright signal into the sky. " +
+                        "Insects swarm, stinging your suit, but the sound of engines thunders above.<br><br>" +
+                        "A rescue vessel bursts through the clouds, its lights cutting through the red gloom. You are pulled aboard as the beacon explodes behind you.<br><br>" +
+                        "<strong>Rescued just in time!</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "Greed for safety drives you to pack the beacon with more crystals. At first, the power is exhilarating—the tower hums louder, brighter—but then the readings spike beyond control.<br><br>" +
+                        "There is a blinding flash. When the smoke clears, the tower is a twisted crater, your suit alarms scream, and the glowing insects descend in a furious cloud.<br><br>" +
+                        "<em>The desert claims you. Game Over.</em>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You slam your hand on the alien console. Streams of symbols and star maps flood your visor. Among the data is an emergency communication protocol compatible with human ships.<br><br>" +
+                        "You trigger the sequence, and a beacon high above Xerion-7 silently broadcasts your coordinates into space. Hours later, a human cruiser answers the call. " +
+                        "The data you recovered reveals hyperlane routes and alien technology that will change humanity’s future.<br><br>" +
+                        "<strong>You return as the Hero of Xerion!</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "Your instincts scream at you to run. You dash out of the ruins as shadows stretch around you. The ground trembles and monstrous silhouettes emerge from the doorway, far faster than you anticipated.<br><br>" +
+                        "You glance back only once, just in time to see gleaming fangs and too many eyes. The last thing you hear is your own ragged breathing cut short.<br><br>" +
+                        "<em>The creatures of Xerion-7 feast tonight...</em>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You return to the wreck of your ship. Sparks still fly from exposed wires, and the hull groans as it cools. Inside, you find a half-intact power cell, a plasma cutter, and a basic medkit.<br><br>" +
+                        "The power cell could boost the beacon, and the plasma cutter might help you explore the ruins more safely.",
+                    choices: [
+                        { text: "Take the power cell to reinforce the beacon", next: 1 },
+                        { text: "Arm yourself with the plasma cutter and go to the ruins", next: 2 }
+                    ]
+                },
+                {
+                    story:
+                        "You focus your scanner on the shimmering swarm. Results flash across your visor: the insects store electrical energy and release an EMP burst when agitated. " +
+                        "Dangerous—but maybe useful.<br><br>" +
+                        "You could try to integrate them into the beacon as a living capacitor, or back off and power the beacon normally.",
+                    choices: [
+                        { text: "Carefully integrate the insects into the beacon system", next: 10 },
+                        { text: "Leave the insects alone and activate the beacon normally", next: 3 }
+                    ]
+                },
+                {
+                    story:
+                        "You press yourself into a shadowed alcove as towering alien creatures stalk into the chamber. " +
+                        "They ignore the console and kneel around a hidden doorway, performing a ritual that opens a sealed floor panel leading to a subterranean hangar.<br><br>" +
+                        "When they descend, the door begins to close. You can sneak after them into the hidden hangar or follow them later through the tunnels.",
+                    choices: [
+                        { text: "Sneak into the hidden hangar while they descend", next: 11 },
+                        { text: "Follow them into the tunnels later (very risky)", next: 6 }
+                    ]
+                },
+                {
+                    story:
+                        "You coax a cluster of insects into a containment field linked to the beacon’s core. The moment you activate it, a massive EMP ripple surges outward. " +
+                        "The insects explode in a brief flash, and for a terrifying second, everything goes dark.<br><br>" +
+                        "Then, the beacon reboots with amplified strength, and a distant frigate diverts course to your location. " +
+                        "Your suit’s AI, however, is fried. You survive and are rescued, but your logs of Xerion-7 are a corrupted, haunted mess.<br><br>" +
+                        "<strong>Ending: Saved by risky science, at a strange cost.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You slip through the sealing door and find an underground hangar containing a small, sleek alien shuttle. " +
+                        "The creatures chant in a circle, ignoring you as you sneak into the cockpit. Surprisingly, the controls respond to your touch.<br><br>" +
+                        "With a roar, the shuttle blasts out of the hangar and into the blood-red sky. " +
+                        "You escape Xerion-7 not as a victim, but as the first human to pilot alien technology.<br><br>" +
+                        "<strong>Ending: You leave as a stolen-star pilot.</strong>",
+                    choices: [] // Ending
+                }
+            ],
+
+            /* =================== MYSTERY =================== */
+            mystery: [
+                {
+                    story:
+                        "Rain drums against the museum’s glass dome as blue-red police lights flash outside. Inside, the Jade Dragon display case stands open, its velvet cushion empty. " +
+                        "No sign of forced entry—just silence and three nervous faces.<br><br>" +
+                        "The Curator wrings his hands, the Security Guard avoids your gaze, and the Janitor clutches his keyring a little too tightly. Someone knows more than they’re saying.",
+                    choices: [
+                        { text: "Interview the anxious Curator first", next: 1 },
+                        { text: "Question the Security Guard at his post", next: 2 },
+                        { text: "Talk to the Janitor with the master keys", next: 3 }
+                    ]
+                },
+                {
+                    story:
+                        "The Curator’s office smells of old books and panic. He rambles about funding problems and the importance of the exhibit, " +
+                        "but his eyes keep darting to a stack of papers on his desk.<br><br>" +
+                        "While he fidgets, you notice a smudged note on the corner: 'Meet midnight – J'. It could be nothing… or everything.",
+                    choices: [
+                        { text: "Search the Curator’s office more thoroughly", next: 4 },
+                        { text: "Compare the note with the Security Guard’s log", next: 5 }
+                    ]
+                },
+                {
+                    story:
+                        "The Security Guard stands stiffly in front of the monitor wall, replaying footage on loop. " +
+                        "He insists nothing unusual happened, but his story falters when you ask about the late shift.<br><br>" +
+                        "He admits seeing the Janitor near the vault corridor shortly before the alarms glitched.",
+                    choices: [
+                        { text: "Inspect the Janitor’s locker", next: 6 },
+                        { text: "Check the vault corridor footage and access log", next: 4 }
+                    ]
+                },
+                {
+                    story:
+                        "In the dim staff hallway, the Janitor leans on his mop, eyes tired. You notice dark circles under his eyes and a stack of unpaid bills peeking out of his cart. " +
+                        "He admits his gambling debts, but firmly denies taking the statue.<br><br>" +
+                        "He glances nervously toward the security wing, clearly hiding something—but is it guilt or fear?",
+                    choices: [
+                        { text: "Continue the investigation and dig deeper", next: 7 }
+                    ]
+                },
+                {
+                    story:
+                        "You return to the Curator’s office and carefully search. Behind a painting, you find a small wall safe. " +
+                        "The code matches numbers scribbled on the smudged note.<br><br>" +
+                        "Inside: insurance documents and correspondence suggesting the museum would profit greatly if the Jade Dragon were 'lost'. " +
+                        "There is also a message from someone known only as 'R' arranging a pickup at the docks tonight.<br><br>" +
+                        "You can move now and arrest the Curator, or set up a sting at the docks to catch whoever 'R' is.",
+                    choices: [
+                        { text: "Arrest the Curator immediately for fraud and theft", next: 9 },
+                        { text: "Set up a sting operation at the docks using the Curator as bait", next: 8 }
+                    ]
+                },
+                {
+                    story:
+                        "You examine the Security Guard’s logbook and electronic records. One entry jumps out: " +
+                        "the Janitor’s badge was used to access the vault hallway at 11:07 PM—well after closing.<br><br>" +
+                        "Camera angles are suspiciously obstructed, but the timing is damning. " +
+                        "You can confront the Janitor with this information or verify the Curator’s safe again.",
+                    choices: [
+                        { text: "Confront the Janitor using the badge logs", next: 6 },
+                        { text: "Double-check the Curator’s office and safe", next: 4 }
+                    ]
+                },
+                {
+                    story:
+                        "You open the Janitor’s dented locker. Among stained rags and cleaning supplies, something gleams: " +
+                        "a tiny shard of green stone with intricate carving—a clear piece of the Jade Dragon.<br><br>" +
+                        "He breaks down, explaining he was paid to hide the statue in pieces, never told why or by whom. " +
+                        "He only knows the contact used the initial 'R' and mentioned 'late-night cargo at the docks.'",
+                    choices: [
+                        { text: "Use this lead to set a trap at the docks", next: 8 },
+                        { text: "Book the Janitor and close the case quickly", next: 9 }
+                    ]
+                },
+                {
+                    story:
+                        "You chase every thread—bank records, security glitches, staff schedules. The deeper you dig, the more contradictions appear, " +
+                        "until finally you're left with nothing but conflicting stories and missing time stamps.<br><br>" +
+                        "Weeks later, the Jade Dragon surfaces on the black market, but the seller vanishes before capture. " +
+                        "The case file lands in the cold-case drawer under a single word: UNSOLVED.<br><br>" +
+                        "<em>Some mysteries refuse to be caught...</em>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "That night at the docks, rain falls in silver sheets under the floodlights. You hide behind crates with a small team of officers. " +
+                        "The Curator arrives, shaking, clutching a plain bag. Moments later, a sleek car pulls up and a well-dressed board member steps out—initial 'R' on her briefcase.<br><br>" +
+                        "You catch everything on camera as she demands the Jade Dragon, bragging about the insurance payout. The sting is perfect.<br><br>" +
+                        "<strong>You arrest the true mastermind and recover the statue. Ending: Full Justice Served.</strong>",
+                    choices: [] // Ending
+                },
+                {
+                    story:
+                        "You decide you have enough: the Curator’s shady papers, the Janitor’s shard, the Guard’s suspicious logs. " +
+                        "You arrest the obvious culprits, write a clean report, and close the file.<br><br>" +
+                        "The Jade Dragon is mostly recovered, the museum’s reputation patched up. But somewhere in the city, " +
+                        "an unknown 'R' smiles in the dark, already planning the next job.<br><br>" +
+                        "<strong>Ending: Case closed… but not complete.</strong>",
+                    choices: [] // Ending
+                }
+            ],
+
+            /* =================== HORROR =================== */
+            horror: [
+                {
+                    story:
+                        "Rain lashes your broken-down car, the windshield wipers frozen mid-swipe. Ahead, the silhouette of a decaying mansion rises against a swollen blood moon. " +
+                        "To your right, the forest looms—black, tangled, and whispering with unseen life.<br><br>" +
+                        "Your phone is dead. The road behind you is washed away by the flood. One way or another, you must leave the safety of the driver’s seat.",
+                    choices: [
+                        { text: "Walk up to the Mansion’s front door", next: 1 },
+                        { text: "Take your chances in the dark Woods", next: 2 }
+                    ]
+                },
+                {
+                    story:
+                        "The mansion door creaks open at your touch, as though it has been waiting. Dust dances in the air, lit by brief flashes of lightning through cracked windows. " +
+                        "A grand staircase leads upward, while a narrow door near the kitchen descends into the basement.<br><br>" +
+                        "A portrait on the wall seems to follow you with its eyes. Somewhere deeper inside, a clock chimes the hour with a hollow echo.",
+                    choices: [
+                        { text: "Go Upstairs toward the bedrooms", next: 3 },
+                        { text: "Head Down into the Basement", next: 4 }
+                    ]
+                },
+                {
+                    story:
+                        "You turn away from the mansion and push into the dripping forest instead. The mud sucks at your shoes, branches claw at your clothes, " +
+                        "and the sound of howling grows closer.<br><br>" +
+                        "Through the trees, you spot two things: a faint lantern light from what might be a lonely cabin, and a low ridge where the howls sound louder.",
+                    choices: [
+                        { text: "Head toward the distant cabin light", next: 8 },
+                        { text: "Climb toward the ridge to get your bearings", next: 7 }
+                    ]
+                },
+                {
+                    story:
+                        "Upstairs, you find a bedroom locked in time—dusty toys, a cracked mirror, and a diary on the nightstand. The final entry reads: " +
+                        "'They come when the blood moon is highest. If you hear the footsteps, don’t breathe.'<br><br>" +
+                        "As you finish the line, the hallway clock strikes midnight. Slow, heavy footsteps begin to climb the stairs behind you.",
+                    choices: [
+                        { text: "Hide in the Closet and hold your breath", next: 5 },
+                        { text: "Stand your ground and confront whatever comes", next: 6 }
+                    ]
+                },
+                {
+                    story:
+                        "The basement stairs groan under your weight. The air grows colder, tasting of metal and dust. " +
+                        "At the bottom, you find a circle of candles burned down to nubs and symbols drawn in something rusty-brown on the stone floor.<br><br>" +
+                        "As you step closer, the circle flares to life, trapping you inside. The walls whisper, and pale shapes drift toward you, hungry for warmth.",
+                    choices: [] // Ending: Eternal prisoner
+                },
+                {
+                    story:
+                        "You squeeze into the closet, heart hammering against your ribs. Through a crack in the door, you see a shadow lengthen across the bedroom floor as something enters—tall, thin, with too many joints. It sniffs the air, slow and searching.<br><br>" +
+                        "Minutes stretch into hours, but eventually the footsteps fade. At dawn, the blood moon finally sinks, and the house falls silent. " +
+                        "You step outside into gray morning light, shaken but alive.<br><br>" +
+                        "<strong>You survived the night.</strong>",
+                    choices: [] // Ending: Survivor
+                },
+                {
+                    story:
+                        "You step into the center of the room and shout into the darkness that you’re not afraid. " +
+                        "The temperature drops to freezing. Your breath fogs. A presence wraps around you, slipping beneath your skin like ice water.<br><br>" +
+                        "In the cracked mirror, your reflection smiles a fraction of a second too late.<br><br>" +
+                        "<em>Something else wears your face now. You never leave the mansion... but the mansion leaves through you.</em>",
+                    choices: [] // Ending: Possessed
+                },
+                {
+                    story:
+                        "You climb the ridge, hoping for a better view. Instead, you find a ring of stones and bones, lit by the red glow of the blood moon. " +
+                        "Wolves emerge from the darkness, eyes shining, circling closer and closer. The growls become a wall of sound.<br><br>" +
+                        "There is nowhere left to run.",
+                    choices: [] // Ending: Wolves
+                },
+                {
+                    story:
+                        "You stumble toward the distant lantern and find a tiny, crooked cabin. An old hunter opens the door, shotgun in hand, " +
+                        "eyes tired but not surprised to see you.<br><br>" +
+                        "'Blood moon brings lost souls,' he mutters, letting you in. You spend the night listening to distant howls while he tells you stories of the mansion and the thing that lives inside it. " +
+                        "At dawn, he walks you back to the highway where a tow truck waits, as if summoned.<br><br>" +
+                        "<strong>Ending: Saved by the Stranger in the Woods.</strong>",
+                    choices: [] // Ending: Cabin rescue
+                }
+            ]
+        };
+
+        let currentAdventure = null;
+        let currentScene = 0;
+
+        function startAdventure(genre) {
+            currentAdventure = genre;
+            currentScene = 0;
+
+            const screen = document.getElementById('adventureScreen');
+            screen.classList.remove('fantasy-bg', 'scifi-bg', 'mystery-bg', 'horror-bg');
+
+            if (genre === 'fantasy') screen.classList.add('fantasy-bg');
+            if (genre === 'scifi') screen.classList.add('scifi-bg');
+            if (genre === 'mystery') screen.classList.add('mystery-bg');
+            if (genre === 'horror') screen.classList.add('horror-bg');
+
+            screen.style.display = 'flex';
+            document.getElementById('endModal').style.display = 'none';
+            showScene();
+        }
+
+        function showScene() {
+            const scene = adventures[currentAdventure][currentScene];
+            const storyDiv = document.getElementById('storyText');
+            const choicesDiv = document.getElementById('choices');
+            const endModal = document.getElementById('endModal');
+
+            storyDiv.innerHTML = scene.story;
+            choicesDiv.innerHTML = '';
+
+            if (scene.choices && scene.choices.length > 0) {
+                scene.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.innerHTML = choice.text;
+                    btn.onclick = () => selectChoice(choice.next);
+                    choicesDiv.appendChild(btn);
+                });
+                endModal.style.display = 'none';
+            } else {
+                // Ending scene → show modal
+                endModal.style.display = 'flex';
+            }
+        }
+
+        function selectChoice(nextScene) {
+            currentScene = nextScene;
+            showScene();
+        }
+
+        function backToHome() {
+            document.getElementById('adventureScreen').style.display = 'none';
+            document.getElementById('endModal').style.display = 'none';
+            currentAdventure = null;
+            currentScene = 0;
+        }
+
+        function restartAdventure() {
+            currentScene = 0;
+            document.getElementById('endModal').style.display = 'none';
+            showScene();
+        }
+
+        function goHomeFromModal() {
+            backToHome();
+        }
+    </script>
+</body>
+</html>
