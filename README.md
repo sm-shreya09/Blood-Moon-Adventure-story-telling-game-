@@ -132,7 +132,7 @@ This project helped in understanding:
 
 Aspiring Software Developer | Python Learner | AI/ML Enthusiast
 
-LinkedIn: :contentReference[oaicite:0]{index=0}
+LinkedIn: :www.linkedin.com/in/shreya-mishra-788929291
 
 ---
 
